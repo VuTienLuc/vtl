@@ -268,12 +268,12 @@ function renderResults(){
     if(miss.length)h+=`<details class="card"><summary>Lớp ${esc(ex.lop)} · chưa có bài của ${miss.length}/${cls.students.length} học sinh</summary><div class="muted">${miss.map(({st,i})=>esc((i+1)+'. '+st.name+(st.sbd?' · '+st.sbd:''))).join('<br>')}</div></details>`}
   h+=`<div class="card gsrow"><div class="l"><b>☁ Google Sheet</b><div id="gsRes" class="muted">${esc(gsOn()?(gsSt.msg||'Tự lưu mỗi khi có thay đổi'):'Chưa nối — vào Cài đặt › Google Sheet')}</div></div><button class="btn primary sm" id="gsNow">Lưu ngay</button></div>`;
   h+=`<button class="btn primary wide" id="sumBtn">🌟 Tổng kết & lời động viên</button>`;
-  h+=`<div class="row gap"><button class="btn" id="exCsv">⬇ Xuất CSV (Excel)</button><button class="btn" id="exCsv2">⬇ CSV chi tiết từng câu</button><button class="btn ghost" id="exCopy">Sao chép bảng</button></div>`;
+  h+=`<div class="row gap"><button class="btn" id="exCsv">⬇ Xuất CSV (Excel)</button><button class="btn" id="exCsv2">⬇ CSV chi tiết từng câu</button><button class="btn ghost" id="exCopy">Sao chép bảng</button></div><div class="row gap"><button class="btn primary" id="exPdf">📄 Xuất PDF: thống kê + ảnh bài làm</button><button class="btn" id="exPdf2">📄 PDF chỉ thống kê</button></div><p class="muted">Mở hộp thoại in: chọn “Lưu thành PDF” (iPhone: bấm Chia sẻ › Lưu vào Tệp).</p>`;
   $('#resBody').innerHTML=h;
   $$('#resBody [data-sort]').forEach(b=>b.onclick=()=>{sortBy=b.dataset.sort;renderResults()});
   $$('#resBody .item').forEach(b=>b.onclick=()=>openDetail(b.dataset.id));
   $$('#resBody [data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-  $('#gsNow').onclick=()=>{if(!gsOn()){toast('Chưa nối Google Sheet — mở Cài đặt');return go('settings')}syncAll(true,curEx())};$('#sumBtn').onclick=openSummary;$('#exCsv').onclick=()=>exportCsv(false);$('#exCsv2').onclick=()=>exportCsv(true);$('#exCopy').onclick=copyTable;
+  $('#gsNow').onclick=()=>{if(!gsOn()){toast('Chưa nối Google Sheet — mở Cài đặt');return go('settings')}syncAll(true,curEx())};$('#sumBtn').onclick=openSummary;$('#exCsv').onclick=()=>exportCsv(false);$('#exCsv2').onclick=()=>exportCsv(true);$('#exCopy').onclick=copyTable;$('#exPdf').onclick=()=>exportPdf(true);$('#exPdf2').onclick=()=>exportPdf(false);
 }
 function tableRows(detail){
   const L=LY(),ex=curEx(),list=myScans().slice().sort((a,b)=>a.sbd.localeCompare(b.sbd)),hd=['STT','SBD','Họ tên','Lớp','Mã đề','Tổng điểm','Điểm TN','Điểm ĐS','Điểm TLN','Ô cần xem'];
@@ -283,6 +283,36 @@ function tableRows(detail){
     if(detail){s.tn.slice(0,ex.nTN).forEach((a,k)=>r.push(sc?(sc.d.tn[k]?1:0):(a||'')));s.ds.slice(0,ex.nDS).forEach((row,q)=>row.forEach((a,k)=>r.push(sc?(sc.d.ds[q][k]?1:0):(a||''))));s.tln.slice(0,ex.nTLN).forEach((a,k)=>r.push(sc?(sc.d.tln[k]?1:0):a))}
     rows.push(r)});
   return rows;
+}
+
+/* ----- Xuất PDF: thống kê + ảnh bài làm (in ra PDF bằng hộp thoại in) ----- */
+async function exportPdf(withImgs){
+  const L=LY(),ex=curEx(),list=myScans().slice().sort((a,b)=>a.sbd.localeCompare(b.sbd));
+  if(!list.length)return toast('Chưa có bài nào để xuất');
+  toast('Đang tạo PDF…',6000);
+  const st=stats(list),tot=totalOf(ex)||10,wk=list.map(s=>({s,sc:scoreOf(s)})).filter(x=>x.sc);
+  const bins=[0,0,0,0,0,0,0,0,0,0];if(st)st.v.forEach(x=>bins[Math.max(0,Math.min(9,Math.floor(x/tot*10+1e-9)))]++);const mx=Math.max(...bins,1);
+  const pass=st?st.v.filter(x=>x>=tot/2).length:0;
+  let h=`<div class="pdf"><div class="pg"><div class="ph"><b>${esc(S.cfg.school||'Thống kê điểm')}</b><span>Thầy Vũ Tiến Lực · Chấm phiếu OMR</span></div><h1>${esc(ex.name||'Bài kiểm tra')}</h1><p class="pm">${esc(exSub(ex)||'')}${ex.lop?'':''} · ${esc(exDesc(ex))}</p>`;
+  h+=`<div class="tl"><div><b>${list.length}</b><small>bài</small></div><div><b>${st?fmt(st.mean):'–'}</b><small>điểm TB</small></div><div><b>${st?fmt(st.max):'–'}</b><small>cao nhất</small></div><div><b>${st?fmt(st.min):'–'}</b><small>thấp nhất</small></div><div><b>${st?Math.round(pass/st.n*100):0}%</b><small>từ ${fmt(tot/2)} điểm trở lên</small></div></div>`;
+  if(st)h+=`<h2>Phổ điểm</h2><div class="hs">${bins.map((b,i)=>`<div><em>${b||''}</em><i style="height:${Math.round(b/mx*100)}%"></i><span>${tot===10?i+'–'+(i+1):fmt(i*tot/10)}</span></div>`).join('')}</div>`;
+  if(wk.length>=2){const parts=[],pct=a=>Math.round(a.filter(Boolean).length/a.length*100);
+    for(let i=0;i<Math.min(L.nTN,ex.nTN);i++)parts.push({n:'Câu '+(i+1),p:pct(wk.map(x=>x.sc.d.tn[i]))});
+    for(let q=0;q<Math.min(L.nDS,ex.nDS);q++)parts.push({n:'ĐS '+(q+1),p:Math.round(wk.reduce((a,x)=>a+x.sc.d.ds[q].filter(Boolean).length,0)/(wk.length*4)*100)});
+    for(let q=0;q<Math.min(L.nTLN,ex.nTLN);q++)parts.push({n:'TLN '+(q+1),p:pct(wk.map(x=>x.sc.d.tln[q]))});
+    h+=`<h2>Tỉ lệ làm đúng từng câu</h2><div class="qs2">${parts.map(x=>`<div><span>${x.n}</span><i><b style="width:${x.p}%;background:${x.p<40?'#dc2626':x.p<70?'#d97706':'#16a34a'}"></b></i><em>${x.p}%</em></div>`).join('')}</div>`}
+  h+=`<h2>Bảng điểm</h2><table class="pt"><thead><tr><th>STT</th><th>SBD</th><th>Họ tên</th><th>Lớp</th><th>Mã đề</th><th>TN</th><th>ĐS</th><th>TLN</th><th>Tổng</th></tr></thead><tbody>`+
+    list.map((s,i)=>{const sc=scoreOf(s),nm=rosterOf(s.sbd,exOf(s))||{};return`<tr><td>${i+1}</td><td>${esc(s.sbd)}</td><td class="l">${esc(nm.name||'')}</td><td>${esc(nm.lop||'')}</td><td>${esc(s.md)}</td><td>${sc?fmt(sc.sTN):''}</td><td>${sc?fmt(sc.sDS):''}</td><td>${sc?fmt(sc.sTL):''}</td><td><b>${sc?fmt(sc.total):'–'}</b></td></tr>`}).join('')+'</tbody></table></div>';
+  if(withImgs){
+    const items=[];for(const s of list){const img=await idb.get(s.id);if(img){const sc=scoreOf(s),nm=rosterOf(s.sbd,exOf(s))||{};items.push(`<figure><figcaption><b>${esc(s.sbd)}${nm.name?' · '+esc(nm.name):''}</b><span>Mã ${esc(s.md)}${nm.lop?' · '+esc(nm.lop):''} → <b>${sc?fmt(sc.total):'–'} điểm</b></span></figcaption><img src="${img}"></figure>`)}}
+    if(items.length){for(let i=0;i<items.length;i+=4)h+=`<div class="pg ig"><div class="ph"><b>${esc(ex.name||'Bài kiểm tra')}</b><span>Ảnh bài làm</span></div><div class="grid4">${items.slice(i,i+4).join('')}</div></div>`}
+    else h+='<div class="pg"><p>Không có ảnh bài làm đã lưu (ảnh chỉ lưu khi quét bằng ứng dụng này).</p></div>';
+  }
+  h+='</div>';
+  const r=$('#printRoot');r.innerHTML=h;
+  await Promise.all([...r.querySelectorAll('img')].map(i=>i.decode?i.decode().catch(()=>{}):0));
+  document.body.classList.add('printing');
+  setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing');r.innerHTML=''},600)},150);
 }
 function exportCsv(detail){
   const rows=tableRows(detail);if(rows.length<2)return toast('Chưa có dữ liệu để xuất');
