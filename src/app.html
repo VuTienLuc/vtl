@@ -2,10 +2,60 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Chấm phiếu">
-<meta name="theme-color" content="#4f46e5"><meta name="format-detection" content="telephone=no">
+<meta name="author" content="Thầy Vũ Tiến Lực - Trường THPT Nguyễn Hữu Cảnh - TP Hồ Chí Minh"><meta name="description" content="Chấm trắc nghiệm bằng camera điện thoại. Tác giả: Thầy Vũ Tiến Lực - Trường THPT Nguyễn Hữu Cảnh - TP Hồ Chí Minh"><meta name="theme-color" content="#1e40af"><meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">
 <title>Chấm phiếu OMR</title>
 <style>/*CSS*/</style></head><body>
+<section class="screen" id="s-home" hidden><div id="homeBody"></div></section>
+
+<section class="screen" id="s-help" hidden>
+  <button class="back" data-go="home">‹ Trang chủ</button>
+  <h1>Hướng dẫn sử dụng</h1>
+  <p class="lead">Dành cho người mới bắt đầu — đọc từ trên xuống, mỗi mục chỉ vài dòng. Bấm vào tiêu đề để mở hoặc đóng.</p>
+  <details class="hp" open><summary><i>👋</i>Ứng dụng này làm gì?</summary><div class="hb">
+    <p>Chấm bài trắc nghiệm <b>bằng camera điện thoại</b>. Học sinh tô đáp án vào phiếu giấy, thầy cô đưa camera vào phiếu, ứng dụng tự đọc và tính điểm trong chưa tới 1 giây.</p>
+    <p>Không cần máy chấm hay phần mềm đắt tiền. Dữ liệu lưu ngay trên chiếc điện thoại này.</p>
+    <p class="muted"><b>SBD</b> = số báo danh. <b>Mã đề</b> = số 3 chữ số học sinh tô trên phiếu để app biết đề nào.</p></div></details>
+  <details class="hp" open><summary><i>🚀</i>5 bước để chấm bài đầu tiên</summary><div class="hb">
+    <ol class="steps5">
+      <li><b>Tạo lớp.</b> Tab <b>Lớp</b> › Tạo lớp › nhập tên lớp, dán danh sách (STT, Họ tên, SBD) từ Excel hoặc gõ từng em. Chưa có SBD thì bấm “Đánh SBD tự động”. <button class="lnk" data-go="class">Mở tab Lớp</button></li>
+      <li><b>Tạo bài kiểm tra.</b> Tab <b>Bài</b> › Tạo bài kiểm tra: tên bài, ngày, lớp, số câu và điểm mỗi phần. Tổng điểm hiện ở cuối form (thường là 10). <button class="lnk" data-go="keys">Mở tab Bài</button></li>
+      <li><b>Nhập đáp án.</b> Cũng ở tab Bài, mục “Đáp án”: bấm Thêm mã đề rồi gõ đáp án, hoặc “Nhập từ Excel / Google Sheet” nếu đã có file.</li>
+      <li><b>In phiếu.</b> Tab <b>Phiếu</b> › In phiếu trắng, khổ A4, tỉ lệ 100%. Mẫu “Nửa tờ A4” in 2 phiếu trên một tờ — cắt đôi là dùng được. Phát cho học sinh. <button class="lnk" data-go="sheet">Mở tab Phiếu</button></li>
+      <li><b>Quét và xem điểm.</b> Tab <b>Quét</b> › Bắt đầu quét. Đặt phiếu phẳng trên bàn, đưa cả 4 ô vuông đen ở góc vào khung, giữ yên máy. Nghe “bíp” là xong — đưa phiếu tiếp theo. Xem điểm ở tab <b>Kết quả</b>. <button class="lnk" data-go="scan">Mở tab Quét</button></li>
+    </ol></div></details>
+  <details class="hp"><summary><i>✏️</i>Học sinh tô phiếu thế nào?</summary><div class="hb"><ul>
+    <li>Dùng bút chì đen (2B) hoặc bút mực đen / xanh đậm, <b>tô kín</b> cả ô tròn.</li>
+    <li><b>Số báo danh và mã đề:</b> viết số vào các ô vuông phía trên, rồi tô đúng số tương ứng ở bên dưới.</li>
+    <li><b>Phần I:</b> mỗi câu chỉ tô <b>một</b> ô A, B, C hoặc D.</li>
+    <li><b>Phần II:</b> mỗi ý (a, b, c, d) tô một ô <b>Đ</b> (Đúng) hoặc <b>S</b> (Sai).</li>
+    <li><b>Phần III:</b> viết đáp án vào ô vuông, rồi mỗi cột tô một ký tự: dấu trừ (–), dấu phẩy (,) hoặc chữ số 0–9. Đáp án ngắn thì để trống các cột còn lại.</li>
+    <li>Tô nhầm: tẩy sạch rồi tô lại. Đừng tô đè hai ô trong một câu.</li></ul></div></details>
+  <details class="hp"><summary><i>📷</i>Mẹo quét nhanh và chính xác</summary><div class="hb"><ul>
+    <li>Đủ sáng, tránh bóng tay hoặc bóng điện thoại che phiếu. Đặt phiếu trên nền bàn tối màu cho dễ nhận.</li>
+    <li>Cầm điện thoại song song với phiếu, đủ xa để thấy trọn cả tờ.</li>
+    <li><b>Cả 4 ô vuông đen ở 4 góc</b> phải nằm trong khung hình, không bị cắt hay che.</li>
+    <li>Nghiêng nhẹ vẫn đọc được. Ô <b>màu vàng</b> là ô app chưa chắc — vào tab Kết quả bấm vào bài để xem và sửa.</li>
+    <li>Camera không mở? Bấm “Chụp ảnh phiếu” hoặc “Chọn nhiều ảnh” ở màn Quét. Camera trực tiếp cần mở trang bằng https (bản đã đưa lên Vercel là được).</li></ul></div></details>
+  <details class="hp"><summary><i>🔍</i>Xem và sửa điểm</summary><div class="hb">
+    <p>Tab <b>Kết quả</b>: bấm vào một học sinh để xem bài làm. Bấm vào từng ô để sửa; điểm tự tính lại. Ô viền vàng là ô app chưa chắc chắn.</p>
+    <p><b>Đề có câu sai?</b> Tab Bài › bấm vào mã đề › mục “Câu sai đề”: chọn câu (hoặc ý) bị lỗi, mọi học sinh đều được điểm câu đó.</p>
+    <p><b>Sửa đáp án hay thang điểm</b> thì điểm của cả lớp tự thay đổi theo.</p></div></details>
+  <details class="hp"><summary><i>🌟</i>Tổng kết và lời động viên</summary><div class="hb">
+    <p>Chấm xong, tab <b>Kết quả</b> › nút “Tổng kết & lời động viên”: xem xếp loại cả lớp, những câu nên ôn lại, và nhận lời nhắn động viên cho từng em theo nhiều phong cách (ấm áp, truyền cảm hứng, vui vẻ, gửi phụ huynh…). Bấm Sao chép hoặc Chia sẻ để gửi qua Zalo, tin nhắn.</p></div></details>
+  <details class="hp"><summary><i>☁️</i>Lưu điểm vào Google Sheet</summary><div class="hb">
+    <p>Vào <b>Cài đặt › Lưu điểm lên Google Sheet</b>, bấm “Lấy mã Apps Script” và làm theo 4 bước (chỉ làm một lần). Sau đó điểm tự lưu theo từng lớp, mỗi bài một cột; sửa đáp án thì bảng tự cập nhật. <button class="lnk" data-go="settings">Mở Cài đặt</button></p></div></details>
+  <details class="hp"><summary><i>📲</i>Cài lên iPhone như một ứng dụng</summary><div class="hb">
+    <p>Mở trang bằng <b>Safari</b> › nút Chia sẻ (hình ô vuông có mũi tên) › <b>Thêm vào MH chính</b>. Từ đó có biểu tượng trên màn hình, mở toàn màn hình và dùng được khi không có mạng.</p></div></details>
+  <details class="hp"><summary><i>❓</i>Hỏi nhanh – đáp gọn</summary><div class="hb">
+    <p><b>Dữ liệu lưu ở đâu?</b> Ngay trên điện thoại này. Thỉnh thoảng vào Cài đặt › Sao lưu để giữ một bản; đổi máy thì bấm Khôi phục.</p>
+    <p><b>Có cần mạng không?</b> Không, trừ khi lưu lên Google Sheet.</p>
+    <p><b>Quét lại phiếu đã quét?</b> Cùng SBD và mã đề thì app cập nhật chứ không tạo trùng.</p>
+    <p><b>Ứng dụng báo “chưa có đáp án”?</b> Vào tab Bài, thêm đáp án đúng mã đề học sinh đã tô.</p>
+    <p><b>Muốn thử trước khi dùng thật?</b> Tab Phiếu › “In phiếu mẫu đã tô”, rồi tab Bài › “Nạp đáp án mẫu (mã 101)” và quét thử.</p></div></details>
+  <div class="authorbox"><b>Thầy Vũ Tiến Lực</b><span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div>
+</section>
+
 <section class="screen" id="s-scan">
   <canvas id="view"></canvas><video id="cam" playsinline muted autoplay></video><div id="flash"></div>
   <div class="hud" id="hud">Bấm “Bắt đầu quét” để mở camera</div>
@@ -38,7 +88,7 @@
   <p class="muted">In khổ A4, tỉ lệ 100% (không chọn “Vừa trang”). Mẫu “Nửa tờ A4” in sẵn 2 phiếu trên 1 tờ: cắt đôi theo nét đứt là có 2 phiếu. In phiếu mẫu đã tô rồi nạp “đáp án mẫu (mã 101)” ở tab Bài để thử quét.</p></div>
   <div id="sheetPrev"></div></section>
 
-<section class="screen" id="s-settings" hidden><h1>Cài đặt</h1>
+<section class="screen" id="s-settings" hidden><button class="back" data-go="home">‹ Trang chủ</button><h1>Cài đặt</h1>
   <div class="card"><h3>Độ nhạy nhận ô tô</h3><input type="range" id="cfgThr" min="0.10" max="0.40" step="0.01"><div class="muted">Ngưỡng <b id="cfgThrV"></b> — hạ thấp nếu học sinh tô nhạt (bút chì), nâng cao nếu hay nhận nhầm ô trống.</div>
   <label class="toggle"><input type="checkbox" id="cfgSnd"> Phát tiếng “bíp” khi chấm xong</label></div>
   <div class="card"><h3>Lưu điểm lên Google Sheet</h3><p class="muted">Điểm tự lưu theo từng lớp (mỗi lớp một trang tính, mỗi bài một cột). Sửa đáp án hay điểm thì bảng tự cập nhật.</p>
@@ -49,10 +99,11 @@
   <div id="gsState" class="gsstate"></div>
   <div class="row gap"><button class="btn" id="gsTest">Kiểm tra kết nối</button><button class="btn primary" id="gsAll">Lưu tất cả bài</button><button class="btn ghost" id="gsCode">Lấy mã Apps Script</button></div></div>
   <div class="card"><h3>Dữ liệu</h3><div class="row gap"><button class="btn" id="bkup">⬇ Sao lưu</button><label class="btn" for="rstFile" style="display:inline-flex;align-items:center">⬆ Khôi phục</label><input type="file" id="rstFile" accept=".json,application/json" hidden><button class="btn danger" id="wipe">Xóa bài đã quét</button></div></div>
+  <div class="card about"><h3>Giới thiệu</h3><p><b>Chấm phiếu OMR</b> — chấm trắc nghiệm bằng camera điện thoại.</p><p class="muted">Tác giả: <b>Thầy Vũ Tiến Lực</b><br>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</p><button class="btn" data-go="help">📖 Hướng dẫn sử dụng</button></div>
   <div class="card"><h3>Cài lên iPhone</h3><p class="muted">Mở trang bằng Safari › nút Chia sẻ › “Thêm vào MH chính”. App chạy toàn màn hình, dùng được khi không có mạng. Camera cần địa chỉ https.</p></div>
 </section>
 
-<nav class="tabbar"><button data-tab="scan" class="on"><i>📷</i>Quét</button><button data-tab="results"><i>📊</i>Kết quả<b id="tabCnt"></b></button><button data-tab="keys"><i>📝</i>Bài</button><button data-tab="class"><i>👥</i>Lớp</button><button data-tab="sheet"><i>📄</i>Phiếu</button><button data-tab="settings"><i>⚙️</i>Cài đặt</button></nav>
+<nav class="tabbar"><button data-tab="home" class="on"><i>🏠</i>Trang chủ</button><button data-tab="scan"><i>📷</i>Quét</button><button data-tab="results"><i>📊</i>Kết quả<b id="tabCnt"></b></button><button data-tab="keys"><i>📝</i>Bài</button><button data-tab="class"><i>👥</i>Lớp</button><button data-tab="sheet"><i>📄</i>Phiếu</button></nav>
 
 <div class="dlg" id="dlg" hidden><div class="sheetbox"><header><b>Chi tiết bài làm</b><button class="x" id="dlgX">✕</button></header><div id="dBody"></div></div></div>
 <div class="dlg" id="sdlg" hidden><div class="sheetbox"><header class="hg"><b>Tổng kết & lời động viên</b><button class="x" id="sdlgX">✕</button></header><div id="sBody"></div></div></div>

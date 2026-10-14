@@ -42,3 +42,6 @@ Tab Phiếu › **In phiếu mẫu đã tô** (hoặc xem trên màn hình máy 
 
 ## Đã kiểm thử
 Ảnh giả lập (xoay 0/90/180/270° ± 14°, nghiêng phối cảnh, bóng đổ, mờ, nhiễu, 800×600 đến 1920×1080), gồm cả nét bút chì nhạt: 135 ảnh, 6120 ô, **0 ô sai**. Ảnh bị cắt mất góc phiếu thì app từ chối đọc thay vì đọc sai. Chưa thử trên iPhone thật — hãy in 1 tờ phiếu mẫu và quét thử trước khi dùng thật.
+
+---
+Tác giả: **Thầy Vũ Tiến Lực** — Trường THPT Nguyễn Hữu Cảnh — TP Hồ Chí Minh

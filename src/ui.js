@@ -206,10 +206,10 @@ async function handleFiles(files){
 
 /* ===================== ĐIỀU HƯỚNG ===================== */
 function go(tab){
-  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);const hl=(tab==='settings'||tab==='help')?'home':tab;$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===hl));
   if(tab!=='scan')stopCam();
-  if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();
-  lsSet('omr.tab',tab);
+  if(tab==='home')renderHome();if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();
+  lsSet('omr.tab',tab);window.scrollTo(0,0);
 }
 $$('.tabbar button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&cam.on)stopCam()});
@@ -219,6 +219,28 @@ $('#snapNow').addEventListener('click',()=>{const A=cam.A;if(A&&A.ok)accept(A);e
 $('#autoTg').addEventListener('click',()=>{S.cfg.auto=!S.cfg.auto;save.cfg();$('#autoTg').textContent=S.cfg.auto?'Tự chốt: BẬT':'Tự chốt: TẮT'});
 $('#fileCap').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value=''});
 $('#fileMulti').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value=''});
+
+/* ===================== TRANG CHỦ ===================== */
+function qsSteps(){
+  const ex=curEx(),hasCls=S.classes.some(c=>c.students.length),hasExam=S.exams.some(e=>String(e.lop||'').trim()),hasKey=Object.keys(ex.keys||{}).length>0,hasScan=S.scans.some(x=>x.examId===ex.id);
+  return[{ok:hasCls,t:'Tạo lớp và danh sách học sinh',d:'Số thứ tự, họ tên, số báo danh',go:'class',b:'Tạo lớp'},
+   {ok:hasExam,t:'Tạo bài kiểm tra',d:'Tên bài, lớp, số câu, điểm từng phần',go:'keys',b:'Tạo bài'},
+   {ok:hasKey,t:'Nhập đáp án',d:'Gõ, dán hoặc nhập từ Excel / Google Sheet',go:'keys',b:'Nhập đáp án'},
+   {ok:!!S.cfg.printed,t:'In phiếu trả lời cho học sinh',d:'Nửa tờ A4: cắt đôi được 2 phiếu',go:'sheet',b:'In phiếu'},
+   {ok:hasScan,t:'Quét phiếu và xem điểm',d:'Đưa camera vào phiếu, nghe “bíp” là xong',go:'scan',b:'Quét ngay'}];
+}
+function renderHome(){
+  const ex=curEx(),n=myScans().length,st=qsSteps(),done=st.filter(x=>x.ok).length,next=st.findIndex(x=>!x.ok);
+  let h=`<div class="hero"><div class="hlogo">📷</div><h1>Chấm phiếu OMR</h1><p>Chấm trắc nghiệm bằng camera điện thoại — nhanh, chính xác, không cần máy chấm.</p><div class="by">Thầy Vũ Tiến Lực<span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div></div>`;
+  h+=`<div class="card cur"><div class="curh"><small>Bài đang chấm</small><b>${esc(ex.name)}</b><span>${esc(exSub(ex)||'Chưa ghi lớp')} · ${n} phiếu đã quét</span></div><button class="btn primary big" id="hmScan">📷 Quét phiếu ngay</button><div class="row gap" style="margin:8px 0 0"><button class="btn sm" data-go="results">📊 Xem kết quả</button><button class="btn sm" data-go="keys">🔄 Đổi / tạo bài</button></div></div>`;
+  h+=`<div class="card"><div class="qh"><h3>Bắt đầu nhanh</h3><span class="pill${done===5?' okp':''}">${done}/5 bước</span></div><div class="prog"><i style="width:${done*20}%"></i></div>`;
+  h+=done===5?`<p class="muted">🎉 Thầy đã hoàn thành đủ các bước. Từ giờ chỉ cần chọn bài rồi quét phiếu.</p>`:'';
+  h+='<ol class="qs">'+st.map((x,i)=>`<li class="${x.ok?'ok':i===next?'next':''}"><span class="dot">${x.ok?'✓':i+1}</span><div class="l"><b>${x.t}</b><small>${x.d}</small></div>${x.ok?'':`<button class="btn sm${i===next?' primary':''}" data-go="${x.go}">${x.b}</button>`}</li>`).join('')+'</ol></div>';
+  h+=`<div class="tiles"><button class="tile" data-go="help"><i>📖</i><b>Hướng dẫn sử dụng</b><small>Từng bước cho người mới</small></button><button class="tile" data-go="settings"><i>⚙️</i><b>Cài đặt</b><small>Google Sheet, sao lưu, độ nhạy</small></button></div>`;
+  h+=`<div class="authorbox"><b>Tác giả: Thầy Vũ Tiến Lực</b><span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div>`;
+  $('#homeBody').innerHTML=h;
+  $('#hmScan').onclick=()=>{go('scan');startCam()};
+}
 
 /* ===================== KẾT QUẢ ===================== */
 let sortBy='t';
@@ -503,10 +525,11 @@ function renderSheet(){
 }
 $('#shLayout').onchange=e=>{S.cfg.layout=e.target.value;save.cfg();renderSheet()};
 ['school','exam','date'].forEach(k=>$('#sh_'+k).oninput=e=>{S.cfg[k]=e.target.value;save.cfg();$('#sheetPrev').innerHTML=sheetSVG(SL(),sheetInfo())});
-function printSVG(svg){const r=$('#printRoot');r.innerHTML=svg;document.body.classList.add('printing');setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing');r.innerHTML=''},400)},120)}
+function markPrinted(){if(!S.cfg.printed){S.cfg.printed=true;save.cfg()}}
+function printSVG(svg){markPrinted();const r=$('#printRoot');r.innerHTML=svg;document.body.classList.add('printing');setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing');r.innerHTML=''},400)},120)}
 $('#shPrint').onclick=()=>printSVG(sheetSVG(SL(),sheetInfo(),null,null,true));
 $('#shDemo').onclick=()=>{const L=SL(),d=demoData(L);printSVG(sheetSVG(L,sheetInfo(),fillFromAnswers(L,d.st),{jitter:1},true))};
-$('#shSvg').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sheetSVG(SL(),sheetInfo(),null,null,true)],{type:'image/svg+xml'}));a.download='phieu-tra-loi-'+SL().id+'.svg';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+$('#shSvg').onclick=()=>{markPrinted();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sheetSVG(SL(),sheetInfo(),null,null,true)],{type:'image/svg+xml'}));a.download='phieu-tra-loi-'+SL().id+'.svg';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
 $('#shDemoShow').onclick=()=>{const L=SL(),d=demoData(L);$('#sheetPrev').innerHTML=sheetSVG(L,sheetInfo(),fillFromAnswers(L,d.st),{jitter:1});toast('Phiếu mẫu đã tô — quét thử, kết quả đúng phải là '+fmt(scoreScan(d.st,d.key,L,defaultPts(L)).total)+' điểm (đáp án mẫu mã 101)',6000)};
 
 /* ===================== LỚP ===================== */
@@ -599,5 +622,6 @@ $('#rstFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{cons
 /* ===================== KHỞI ĐỘNG ===================== */
 setTimeout(()=>queueSync(),1500);updCount();updExLbl();$$('.exlbl').forEach(e=>e.onclick=()=>go('keys'));$('#autoTg').textContent=S.cfg.auto?'Tự chốt: BẬT':'Tự chốt: TẮT';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
-go(lsGet('omr.tab','scan')==='scan'?'scan':lsGet('omr.tab','scan'));
+go(lsGet('omr.tab','home'));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b&&!b.dataset.skip)go(b.dataset.go)});
 window.OMR={S,openSummary,buildMsg,buildClassMsg,MSG_STYLES,bandOf,parseStudents,renderClass,openClass,rebuildRoster,clsOf,gsRows,gsBody,syncAll,queueSync,gsPost,parseKeyGrid,parseCSV,readXlsx,classifyAns,openImport,curEx,selectEx,newExam,totalOf,ptsOf,exOf,openExam,renderKeys,migrate,analyze,getLayout,buildLayout,sheetSVG,demoData,fillFromAnswers,scoreScan,parseKeyText,keyToText,handleFiles,commitScan,scoreOf,go,defaultPts,tableRows,ptsNow};
