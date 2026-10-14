@@ -1,7 +1,7 @@
 /* ===================== SAO LƯU TỰ ĐỘNG LÊN GOOGLE DRIVE + TRẠNG THÁI ĐỒNG BỘ ===================== */
 /* Dữ liệu (lớp, bài, phiếu, sổ điểm…) gửi qua Apps Script vào thư mục “Chấm phiếu VTL - Sao lưu” trong Drive của thầy.
    Ảnh bài làm gửi tăng dần (chỉ ảnh mới). Mỗi ngày giữ một bản riêng, giữ 14 ngày gần nhất. */
-const BK={st:'idle',msg:'',t:lsGet('omr.bkt',0),dirty:lsGet('omr.bkdirty',0),busy:false,timer:0,err:'',imgs:new Set(lsGet('omr.bkimgs',[])),last:lsGet('omr.bkinfo',null)};
+const BK={st:'idle',msg:'',t:lsGet('omr.bkt',0),dirty:lsGet('omr.bkdirty',0),busy:false,timer:0,err:'',rv:lsGet('omr.bkrv',0),pulling:false,quiet:false,pErr:0,imgT:lsGet('omr.bkimgt',0),imgs:new Set(lsGet('omr.bkimgs',[])),last:lsGet('omr.bkinfo',null)};
 const bkOn=()=>gsOn()&&S.cfg.bkAuto!==false;
 const hhmm=t=>{const d=new Date(t),z=x=>String(x).padStart(2,'0');return z(d.getHours())+':'+z(d.getMinutes())+(new Date().toDateString()===d.toDateString()?'':' '+z(d.getDate())+'/'+z(d.getMonth()+1))};
 function scriptHint(msg){return /undefined|Unknown|không hợp lệ|not a function/i.test(String(msg||''))?' — mã Apps Script trên Google còn bản cũ: dán mã mới (Cài đặt › Lấy mã Apps Script) rồi Triển khai › Quản lý bản triển khai › phiên bản mới':''}
@@ -34,8 +34,8 @@ function bkRender(){
   $('#bkNow').onclick=()=>bkRun(true);$('#bkRest').onclick=bkRestoreDlg;
 }
 /* ---------- đánh dấu thay đổi & hàng đợi ---------- */
-function bkMark(){BK.dirty=Date.now();lsSet('omr.bkdirty',BK.dirty);bkSched();bkUI()}
-function bkSched(){if(!bkOn())return;clearTimeout(BK.timer);BK.timer=setTimeout(()=>bkRun(false),20000)}
+function bkMark(){if(BK.quiet)return;BK.dirty=Date.now();lsSet('omr.bkdirty',BK.dirty);bkSched();bkUI()}
+function bkSched(){if(!bkOn())return;clearTimeout(BK.timer);BK.timer=setTimeout(()=>bkRun(false),10000)}
 ['scans','classes','exams','keys','qr'].forEach(k=>{const f=save[k];if(!f)return;save[k]=(...a)=>{const r=f(...a);bkMark();lkQueue();return r}});
 
 /* ---------- gửi lên Drive ---------- */
@@ -48,10 +48,11 @@ async function bkRun(manual){
   if(BK.busy)return;
   if(!navigator.onLine){bkUI();if(manual)toast('Đang offline — sẽ sao lưu khi có mạng');return}
   BK.busy=true;BK.err='';BK.msg='Đang gửi dữ liệu lên Drive…';bkUI();
-  const t0=Date.now();let unconf=false;
+  let t0=Date.now(),unconf=false;
   try{
+    await bkPull(true);t0=Date.now();
     const d=bkData(),r=await gsPost({action:'bk_put',name:'du-lieu',day:todayISO(),data:JSON.stringify(d)});
-    if(!r||!r.ok)throw new Error((r&&r.error)||'Lỗi không rõ');if(r.unconfirmed)unconf=true;
+    if(!r||!r.ok)throw new Error((r&&r.error)||'Lỗi không rõ');if(r.unconfirmed)unconf=true;else if(r.u){BK.rv=r.u;lsSet('omr.bkrv',BK.rv)}
     let nimg=BK.imgs.size;
     if(S.cfg.bkImg!==false){
       const ids=S.scans.map(s=>s.id).filter(id=>!BK.imgs.has(id));let chunk={},bytes=0,cnt=0,sent=0;
@@ -69,6 +70,47 @@ async function bkRun(manual){
     if(bkOn())BK.timer=setTimeout(()=>bkRun(false),60000);
   }
 }
+/* ---------- tự kéo dữ liệu mới từ Google về máy (mỗi 10 giây) ---------- */
+function bkSig(d){return JSON.stringify([d.scans,d.classes,d.exams,d.keys,d.qr])}
+function bkMerge(L,R){ // L: máy này (đang có thay đổi chưa lưu), R: bản trên Drive. Hợp hai bên, ưu tiên máy này.
+  const un=(a,b)=>{const m=new Map();(b||[]).forEach(x=>m.set(x.id,x));(a||[]).forEach(x=>m.set(x.id,x));return[...m.values()]};
+  const o=Object.assign({},R,L);
+  o.scans=un(L.scans,R.scans);o.exams=(L.exams||R.exams)?un(L.exams,R.exams):null;o.classes=un(L.classes,R.classes);
+  o.keys=Object.assign({},R.keys||{},L.keys||{});o.qr=(L.qr&&L.qr.rounds&&L.qr.rounds.length)?L.qr:R.qr;return o}
+async function bkPull(beforePush){
+  if(!bkOn()||BK.pulling||!navigator.onLine)return false;
+  BK.pulling=true;
+  try{
+    const v=await gsPost({action:'bk_ver'});
+    if(!v||!v.ok||v.unconfirmed)throw new Error((v&&v.error)||'Không hỏi được phiên bản');
+    BK.pErr=0;
+    if(!v.u||v.u<=BK.rv)return false;
+    const r=await gsPost({action:'bk_get',name:'du-lieu'});
+    if(!r||!r.ok)throw new Error((r&&r.error)||'Không tải được');
+    const R=JSON.parse(r.data),L=bkData(),same=bkSig(R)===bkSig(L);
+    BK.rv=v.u;lsSet('omr.bkrv',BK.rv);
+    if(same)return false;
+    const dirty=!!BK.dirty;
+    BK.quiet=true;try{applyBackup(dirty?bkMerge(L,R):R)}finally{BK.quiet=false}
+    if(dirty){BK.dirty=Date.now();lsSet('omr.bkdirty',BK.dirty)}
+    BK.pulled=Date.now();bkPullImgs(R);
+    const tab=lsGet('omr.tab','home');
+    if(tab!=='scan'&&tab!=='qr'&&!$$('dialog[open]').length&&!document.querySelector('input:focus,textarea:focus'))go(tab);
+    toast('☁ Đã cập nhật dữ liệu mới từ Google',2500);bkUI();
+    return true;
+  }catch(e){BK.pErr++;if(!beforePush&&BK.pErr===1)console.warn('bkPull',e&&e.message||e);return false}
+  finally{BK.pulling=false}
+}
+async function bkPullImgs(R){
+  try{const need=(R.scans||[]).some(s=>!BK.imgs.has(s.id));if(!need)return;
+    const l=await gsPost({action:'bk_list'});let t=BK.imgT;
+    for(const f of(l.files||[]).filter(x=>/^anh-/.test(x.name)&&x.updated>BK.imgT)){
+      const g=await gsPost({action:'bk_get',name:f.name.replace(/\.json$/,'')});if(!g||!g.ok)continue;
+      const o=JSON.parse(g.data);for(const id of Object.keys(o)){if(!(await idb.get(id)))await idb.put(id,o[id]);BK.imgs.add(id)}t=Math.max(t,f.updated)}
+    BK.imgT=t;lsSet('omr.bkimgt',t);lsSet('omr.bkimgs',[...BK.imgs])}catch(e){}
+}
+setInterval(()=>{if(!document.hidden&&!BK.busy&&!BK.dirty&&(BK.pErr<3||Date.now()%6===0))bkPull(false)},10000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)bkPull(false)});
 /* ---------- khôi phục ---------- */
 function applyBackup(d){
   const keep={gsUrl:S.cfg.gsUrl,gsSheet:S.cfg.gsSheet,gsToken:S.cfg.gsToken};
@@ -109,4 +151,4 @@ window.addEventListener('online',()=>{if(BK.dirty&&bkOn())bkRun(false);bkUI()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&BK.dirty&&bkOn())bkRun(false)});
 setInterval(()=>{if(BK.dirty&&bkOn()&&!BK.busy)bkRun(false);bkUI()},300000);
 setTimeout(()=>{if(bkOn()&&!BK.t&&(S.scans.length||S.classes.length))bkMark();else if(bkOn()&&BK.dirty)bkSched();bkUI();if(lkOn())lkQueue()},3000);
-Object.assign(window.OMR,{BK,bkRun,bkData,bkState,applyBackup,bkRestoreDlg,lkRows,lkPublish,lkNewCode,progData,gbSem,gbYear,gbSummary,colScore,renderGB,renderProg,renderRep,repPage,parentMsg,lkLink,lkSite,classStat,cmpGroups,stExamScore});
+Object.assign(window.OMR,{BK,bkPull,bkMerge,bkRun,bkData,bkState,applyBackup,bkRestoreDlg,lkRows,lkPublish,lkNewCode,progData,gbSem,gbYear,gbSummary,colScore,renderGB,renderProg,renderRep,repPage,parentMsg,lkLink,lkSite,classStat,cmpGroups,stExamScore});

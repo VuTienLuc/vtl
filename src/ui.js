@@ -73,7 +73,7 @@ async function gsPost(body){
 }
 let gsTimer=0,gsBusy=false,gsAgain=false;const gsSt={msg:'',ok:null};
 function gsStatus(msg,ok){gsSt.msg=msg;gsSt.ok=ok;const el=$('#gsState');if(el){el.textContent=msg;el.className='gsstate '+(ok===true?'ok':ok===false?'bad':'')}const rl=$('#gsRes');if(rl)rl.textContent=msg}
-function queueSync(){if(!gsOn()||!S.cfg.gsAuto)return;clearTimeout(gsTimer);gsTimer=setTimeout(()=>syncAll(false),2500)}
+function queueSync(){if(!gsOn()||!S.cfg.gsAuto)return;clearTimeout(gsTimer);gsTimer=setTimeout(()=>syncAll(false),10000)}
 async function syncExam(ex,force){
   const rows=gsRows(ex),body=gsBody(ex,rows),sig=JSON.stringify(body);
   if(!force&&sig===ex.gsSig)return'same';if(!force&&!rows.length&&!ex.gsSig)return'skip';

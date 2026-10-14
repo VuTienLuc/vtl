@@ -4,7 +4,7 @@
 var TOKEN = '';   // (tùy chọn) đặt mật khẩu, ví dụ 'abc123' rồi nhập đúng mật khẩu đó trong app
 
 function out_(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);}
-var VER = 2;
+var VER = 3;
 function doGet(e){
   var q=(e&&e.parameter)||{};
   if(q.m) return lookup_(q.m);
@@ -16,7 +16,8 @@ function doPost(e){
     var p=JSON.parse(e.postData.contents);
     if(TOKEN && p.token!==TOKEN) return out_({ok:false,error:'Sai mật khẩu'});
     // ----- sao lưu Drive (không cần Google Sheet) -----
-    if(p.action==='bk_put'){ bkPut_(p); return out_({ok:true}); }
+    if(p.action==='bk_put'){ var f=bkPut_(p); return out_({ok:true,u:f.getLastUpdated().getTime()}); }
+    if(p.action==='bk_ver') return out_(bkVer_());
     if(p.action==='bk_img'){ bkSave_(safeName_(p.name),p.data); return out_({ok:true}); }
     if(p.action==='bk_list') return out_({ok:true,files:bkList_()});
     if(p.action==='bk_get') return out_(bkGet_(p.name));
@@ -39,9 +40,14 @@ function bkSave_(name,data){
   if(it.hasNext()){var file=it.next();file.setContent(data);return file;}
   return f.createFile(fn,data,'application/json');
 }
+function bkVer_(){
+  var it=bkFolder_().getFilesByName('du-lieu.json');
+  if(!it.hasNext())return {ok:true,u:0};
+  var f=it.next();return {ok:true,u:f.getLastUpdated().getTime(),size:f.getSize()};
+}
 function bkPut_(p){
   var name=safeName_(p.name);
-  bkSave_(name,p.data);
+  var main=bkSave_(name,p.data);
   if(name==='du-lieu'&&p.day&&/^\d{4}-\d\d-\d\d$/.test(p.day)){
     bkSave_('du-lieu-'+p.day,p.data);
     // giữ BK_KEEP_DAYS bản theo ngày gần nhất
@@ -50,6 +56,7 @@ function bkPut_(p){
     names.sort().reverse();
     for(var i=BK_KEEP_DAYS;i<names.length;i++)map[names[i]].setTrashed(true);
   }
+  return main;
 }
 function bkList_(){
   var it=bkFolder_().getFiles(),out=[];
