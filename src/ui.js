@@ -206,9 +206,9 @@ async function handleFiles(files){
 
 /* ===================== ĐIỀU HƯỚNG ===================== */
 function go(tab){
-  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);const hl=(tab==='settings'||tab==='help')?'home':tab;$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===hl));
-  if(tab!=='scan')stopCam();
-  if(tab==='home')renderHome();if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();
+  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);const hl=(tab==='settings'||tab==='help'||tab==='qr')?'home':tab;$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===hl));
+  if(tab!=='scan')stopCam();if(tab!=='qr')stopQrCam();
+  if(tab==='home')renderHome();if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();if(tab==='qr')renderQR();
   lsSet('omr.tab',tab);window.scrollTo(0,0);
 }
 $$('.tabbar button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
@@ -236,7 +236,7 @@ function renderHome(){
   h+=`<div class="card"><div class="qh"><h3>Bắt đầu nhanh</h3><span class="pill${done===5?' okp':''}">${done}/5 bước</span></div><div class="prog"><i style="width:${done*20}%"></i></div>`;
   h+=done===5?`<p class="muted">🎉 Thầy đã hoàn thành đủ các bước. Từ giờ chỉ cần chọn bài rồi quét phiếu.</p>`:'';
   h+='<ol class="qs">'+st.map((x,i)=>`<li class="${x.ok?'ok':i===next?'next':''}"><span class="dot">${x.ok?'✓':i+1}</span><div class="l"><b>${x.t}</b><small>${x.d}</small></div>${x.ok?'':`<button class="btn sm${i===next?' primary':''}" data-go="${x.go}">${x.b}</button>`}</li>`).join('')+'</ol></div>';
-  h+=`<div class="tiles"><button class="tile" data-go="help"><i>📖</i><b>Hướng dẫn sử dụng</b><small>Từng bước cho người mới</small></button><button class="tile" data-go="settings"><i>⚙️</i><b>Cài đặt</b><small>Google Sheet, sao lưu, độ nhạy</small></button></div>`;
+  h+=`<div class="tiles"><button class="tile wide" data-go="qr"><i>👥</i><span><b>Chấm nhóm bằng thẻ QR</b><small>Hoạt động nhóm: mỗi nhóm giơ thẻ xoay 4 hướng A-B-C-D, quét một lần cả lớp</small></span></button><button class="tile" data-go="help"><i>📖</i><b>Hướng dẫn sử dụng</b><small>Từng bước cho người mới</small></button><button class="tile" data-go="settings"><i>⚙️</i><b>Cài đặt</b><small>Google Sheet, sao lưu, độ nhạy</small></button></div>`;
   h+=`<div class="authorbox"><b>Tác giả: Thầy Vũ Tiến Lực</b><span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div>`;
   $('#homeBody').innerHTML=h;
   $('#hmScan').onclick=()=>{go('scan');startCam()};
@@ -616,12 +616,11 @@ $('#gsAll').onclick=()=>{if(!gsOn())return gsStatus('⚠ Chưa nhập link Apps 
 $('#gsCode').onclick=()=>{$('#kBody').innerHTML=`<div class="note"><b>Cài một lần (khoảng 3 phút)</b><br>1. Tạo (hoặc mở) một Google Sheet › menu <b>Tiện ích mở rộng › Apps Script</b>.<br>2. Xóa mã cũ, dán mã dưới đây, bấm Lưu.<br>3. <b>Triển khai › Tùy chọn triển khai mới › Ứng dụng web</b>: Thực thi với tư cách <b>Tôi</b>, Người có quyền truy cập <b>Bất kỳ ai</b> › Triển khai, cấp quyền khi Google hỏi.<br>4. Sao chép <b>URL ứng dụng web</b> (bắt đầu bằng script.google.com/macros/s/…) dán vào app. Nếu script không tạo từ bên trong Google Sheet thì dán thêm link bảng tính.<br>Sửa mã sau này: phải Triển khai › Quản lý › tạo phiên bản mới.</div><textarea id="gsCodeTx" rows="12" readonly></textarea><div class="row gap"><button class="btn primary" id="gsCopy">Sao chép mã</button><button class="btn ghost" id="gsCl">Đóng</button></div>`;$('#gsCodeTx').value=GS_CODE;$('#kdlg').hidden=false;
   $('#gsCopy').onclick=async()=>{try{await navigator.clipboard.writeText(GS_CODE);toast('Đã sao chép mã Apps Script')}catch(e){$('#gsCodeTx').select();document.execCommand('copy');toast('Đã sao chép')}};$('#gsCl').onclick=()=>$('#kdlg').hidden=true};
 $('#wipe').onclick=async()=>{if(!confirm('Xóa TẤT CẢ phiếu đã quét của bài “'+curEx().name+'”?'))return;const ids=myScans().map(s=>s.id);S.scans=S.scans.filter(s=>!ids.includes(s.id));save.scans();ids.forEach(i=>idb.del(i));updCount();toast('Đã xóa')};
-$('#bkup').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:3,cfg:S.cfg,keys:S.keys,scans:S.scans,classes:S.classes,exams:S.exams,cur:S.cur})],{type:'application/json'}));a.download='sao-luu-cham-phieu.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
-$('#rstFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.cfg)S.cfg=Object.assign({},DEF,d.cfg);S.keys=d.keys||{};if(d.scans)S.scans=d.scans;if(d.classes)S.classes=d.classes;else if(d.roster){lsSet('omr.roster',d.roster);S.classes=null}S.exams=d.exams||null;S.cur=d.cur||null;migrateClasses();migrate();Object.values(save).forEach(fn=>fn());updCount();updExLbl();renderSettings();toast('Đã khôi phục')}catch(err){toast('File sao lưu không hợp lệ')}e.target.value=''};
+$('#bkup').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:3,cfg:S.cfg,keys:S.keys,scans:S.scans,classes:S.classes,exams:S.exams,cur:S.cur,qr:S.qr})],{type:'application/json'}));a.download='sao-luu-cham-phieu.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+$('#rstFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.cfg)S.cfg=Object.assign({},DEF,d.cfg);S.keys=d.keys||{};if(d.scans)S.scans=d.scans;if(d.classes)S.classes=d.classes;else if(d.roster){lsSet('omr.roster',d.roster);S.classes=null}if(d.qr&&Array.isArray(d.qr.rounds))S.qr=Object.assign({n:24,cur:0},d.qr);S.exams=d.exams||null;S.cur=d.cur||null;migrateClasses();migrate();Object.values(save).forEach(fn=>fn());updCount();updExLbl();renderSettings();toast('Đã khôi phục')}catch(err){toast('File sao lưu không hợp lệ')}e.target.value=''};
 
 /* ===================== KHỞI ĐỘNG ===================== */
 setTimeout(()=>queueSync(),1500);updCount();updExLbl();$$('.exlbl').forEach(e=>e.onclick=()=>go('keys'));$('#autoTg').textContent=S.cfg.auto?'Tự chốt: BẬT':'Tự chốt: TẮT';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
-go(lsGet('omr.tab','home'));
 document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b&&!b.dataset.skip)go(b.dataset.go)});
 window.OMR={S,openSummary,buildMsg,buildClassMsg,MSG_STYLES,bandOf,parseStudents,renderClass,openClass,rebuildRoster,clsOf,gsRows,gsBody,syncAll,queueSync,gsPost,parseKeyGrid,parseCSV,readXlsx,classifyAns,openImport,curEx,selectEx,newExam,totalOf,ptsOf,exOf,openExam,renderKeys,migrate,analyze,getLayout,buildLayout,sheetSVG,demoData,fillFromAnswers,scoreScan,parseKeyText,keyToText,handleFiles,commitScan,scoreOf,go,defaultPts,tableRows,ptsNow};

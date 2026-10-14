@@ -37,6 +37,15 @@
     <li><b>Cả 4 ô vuông đen ở 4 góc</b> phải nằm trong khung hình, không bị cắt hay che.</li>
     <li>Nghiêng nhẹ vẫn đọc được. Ô <b>màu vàng</b> là ô app chưa chắc — vào tab Kết quả bấm vào bài để xem và sửa.</li>
     <li>Camera không mở? Bấm “Chụp ảnh phiếu” hoặc “Chọn nhiều ảnh” ở màn Quét. Camera trực tiếp cần mở trang bằng https (bản đã đưa lên Vercel là được).</li></ul></div></details>
+  <details class="hp"><summary><i>👥</i>Chấm hoạt động nhóm bằng thẻ QR</summary><div class="hb">
+    <p>Dùng khi cả lớp chia nhóm (tối đa 24 nhóm) và mỗi nhóm trả lời câu trắc nghiệm A, B, C, D <b>bằng cách giơ thẻ</b>, không cần phiếu giấy.</p>
+    <ol class="steps5">
+      <li><b>In thẻ.</b> Trang chủ › Chấm nhóm bằng thẻ QR › tab <b>In thẻ</b>. Mỗi nhóm một thẻ có số nhóm riêng.</li>
+      <li><b>Học sinh chọn đáp án bằng cách xoay thẻ</b>: chữ cái muốn chọn (A, B, C hoặc D) nằm ở <b>cạnh trên</b> của thẻ.</li>
+      <li><b>Chấm vòng.</b> Tab <b>Chấm vòng</b>: bấm A/B/C/D ở “Đáp án đúng”, bấm Bắt đầu quét và giơ máy về phía lớp. Ô nhóm nào đã nhận sẽ hiện chữ cái.</li>
+      <li><b>Chốt vòng</b> rồi sang vòng mới. Mỗi vòng một câu hỏi; điểm cộng dồn ở tab <b>Bảng điểm</b>.</li>
+    </ol>
+    <p class="muted">Quét không ra? Đứng gần hơn, bật “Quét xa”, hoặc in thẻ cỡ to. Bấm vào ô nhóm để sửa tay. Có thể đổi đáp án đúng sau khi chốt, điểm tự tính lại.</p></div></details>
   <details class="hp"><summary><i>🔍</i>Xem và sửa điểm</summary><div class="hb">
     <p>Tab <b>Kết quả</b>: bấm vào một học sinh để xem bài làm. Bấm vào từng ô để sửa; điểm tự tính lại. Ô viền vàng là ô app chưa chắc chắn.</p>
     <p><b>Đề có câu sai?</b> Tab Bài › bấm vào mã đề › mục “Câu sai đề”: chọn câu (hoặc ý) bị lỗi, mọi học sinh đều được điểm câu đó.</p>
@@ -79,6 +88,41 @@
 <section class="screen" id="s-keys" hidden><h1>Bài kiểm tra</h1><div id="keyBody"></div></section>
 
 <section class="screen" id="s-class" hidden><h1>Lớp</h1><div id="classBody"></div></section>
+
+<section class="screen" id="s-qr" hidden>
+  <button class="back" data-go="home">‹ Trang chủ</button>
+  <h1>Chấm nhóm bằng thẻ QR</h1>
+  <div class="seg" id="qrSeg"><button data-qt="play" class="on">📷 Chấm vòng</button><button data-qt="board">🏆 Bảng điểm</button><button data-qt="cards">🖨 In thẻ</button></div>
+  <div id="qt-play">
+    <div class="card qrround">
+      <div class="rbar"><button class="btn" id="qrPrev" aria-label="Vòng trước">‹</button><div class="rname"><b id="qrRName">Vòng 1</b><small id="qrRSub"></small></div><button class="btn" id="qrNext" aria-label="Vòng sau">＋</button></div>
+      <div class="keyrow"><span>Đáp án đúng</span><div class="kchips" id="qrKey"><button data-k="A">A</button><button data-k="B">B</button><button data-k="C">C</button><button data-k="D">D</button></div></div>
+      <div class="row"><label class="f">Điểm mỗi nhóm đúng<input id="qrPts" inputmode="decimal"></label><label class="f">Số nhóm (1–24)<input id="qrN" inputmode="numeric"></label></div>
+    </div>
+    <div class="qrcam" id="qrBox"><canvas id="qrView"></canvas><video id="qrCam" playsinline muted autoplay></video>
+      <div class="qrhud" id="qrHud">Bấm “Bắt đầu quét” để mở camera</div>
+      <div class="qrstart" id="qrStartBox"><div class="qrico">👥</div><button class="btn primary big" id="qrStart">📷 Bắt đầu quét</button><p>Các nhóm giơ thẻ lên, chữ cái đáp án ở <b>cạnh trên</b>. Giơ máy về phía lớp, app đọc nhiều thẻ cùng lúc.</p></div></div>
+    <div class="row gap" id="qrCamBtns" hidden><button class="btn" id="qrStop">Dừng camera</button><button class="btn" id="qrHi">Quét xa: TẮT</button></div>
+    <div id="qrStat"></div>
+    <div id="qrGrid" class="qgrid"></div>
+    <p class="muted" style="margin:6px 0 10px">Bấm vào ô nhóm để sửa tay: A → B → C → D → trống.</p>
+    <div id="qrDist"></div>
+    <div class="row gap"><button class="btn primary" id="qrFinish">✓ Chốt vòng, sang vòng mới</button><button class="btn" id="qrLock">🔒 Khóa vòng</button></div>
+    <div class="row gap" style="margin-top:8px"><button class="btn sm" id="qrClear">Xóa kết quả vòng này</button><button class="btn sm ghost" id="qrDel">Xóa hẳn vòng</button></div>
+  </div>
+  <div id="qt-board" hidden></div>
+  <div id="qt-cards" hidden>
+    <div class="card"><h3>In thẻ QR cho các nhóm</h3>
+      <div class="row"><label class="f">Từ nhóm<input id="qcFrom" inputmode="numeric"></label><label class="f">Đến nhóm<input id="qcTo" inputmode="numeric"></label></div>
+      <label class="f">Cỡ thẻ<select id="qcPer"><option value="6">6 thẻ/trang · 9 cm (quét gần)</option><option value="2">2 thẻ/trang · 14 cm (nên dùng)</option><option value="1">1 thẻ/trang · 19 cm (quét xa)</option></select></label>
+      <p class="muted" id="qcInfo"></p>
+      <div class="row gap"><button class="btn primary" id="qcPrint">🖨 In thẻ</button><button class="btn" id="qcDl">⬇ Tải file để in trên máy tính</button></div>
+      <p class="muted">In khổ A4, tỉ lệ 100% (không chọn “Vừa trang”), in <b>đen trắng</b> là đủ. Nên in giấy dày hoặc ép plastic để thẻ phẳng, không bóng loá.</p></div>
+    <div class="card"><h3>Cách dùng thẻ</h3>
+      <div class="qcwrap"><div id="qcPrev"></div>
+      <ol class="qhow"><li>Mỗi nhóm giữ <b>một thẻ riêng</b> (số nhóm in ở hai góc).</li><li>Thẻ có 4 chữ <b>A, B, C, D</b> ở 4 cạnh. Nhóm chọn đáp án nào thì <b>xoay thẻ để chữ đó nằm ở cạnh trên</b>.</li><li>Cả nhóm giơ thẻ cao, mặt có mã hướng về phía thầy cô, không che mã QR.</li><li>Thầy cô giơ điện thoại quét — app đọc nhiều thẻ cùng lúc và tự ghi đáp án.</li></ol></div></div>
+  </div>
+</section>
 
 <section class="screen" id="s-sheet" hidden><h1>Phiếu trả lời</h1>
   <div class="card"><label class="f">Mẫu phiếu<select id="shLayout"></select></label>

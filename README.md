@@ -45,3 +45,7 @@ Tab Phiếu › **In phiếu mẫu đã tô** (hoặc xem trên màn hình máy 
 
 ---
 Tác giả: **Thầy Vũ Tiến Lực** — Trường THPT Nguyễn Hữu Cảnh — TP Hồ Chí Minh
+
+
+## Chấm nhóm bằng thẻ QR
+Mỗi nhóm (1–24) một thẻ QR; xoay thẻ để chữ A/B/C/D ở cạnh trên. Thư viện: jsQR (Apache-2.0), qrcode-generator (MIT).
