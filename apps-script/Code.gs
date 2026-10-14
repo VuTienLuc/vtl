@@ -1,4 +1,4 @@
-/* Chấm phiếu OMR — nhận điểm từ app, ghi vào Google Sheet, sao lưu lên Drive và phục vụ trang tra cứu điểm.
+/* Chấm phiếu VTL — nhận điểm từ app, ghi vào Google Sheet, sao lưu lên Drive và phục vụ trang tra cứu điểm.
    Mỗi LỚP một trang tính: SBD | Họ tên | TB | các cột điểm của từng bài kiểm tra.
    Trang "Chi tiết": toàn bộ điểm từng bài (điểm TN / ĐS / TLN). Gửi lại nhiều lần chỉ cập nhật, không nhân đôi. */
 var TOKEN = '';   // (tùy chọn) đặt mật khẩu, ví dụ 'abc123' rồi nhập đúng mật khẩu đó trong app
@@ -8,7 +8,7 @@ var VER = 2;
 function doGet(e){
   var q=(e&&e.parameter)||{};
   if(q.m) return lookup_(q.m);
-  return out_({ok:true,ver:VER,msg:'Chấm phiếu OMR: script sẵn sàng'});
+  return out_({ok:true,ver:VER,msg:'Chấm phiếu VTL: script sẵn sàng'});
 }
 function doPost(e){
   var lock=null;
@@ -30,8 +30,8 @@ function doPost(e){
   }catch(err){return out_({ok:false,error:String(err&&err.message||err)});}
   finally{ if(lock) lock.releaseLock(); }
 }
-/* ===== Sao lưu lên Google Drive: thư mục "Chấm phiếu OMR - Sao lưu" ===== */
-var BK_FOLDER='Chấm phiếu OMR - Sao lưu', BK_KEEP_DAYS=14;
+/* ===== Sao lưu lên Google Drive: thư mục "Chấm phiếu VTL - Sao lưu" ===== */
+var BK_FOLDER='Chấm phiếu VTL - Sao lưu', BK_KEEP_DAYS=14;
 function safeName_(n){n=String(n||'');if(!/^[A-Za-z0-9_\-]{1,80}$/.test(n))throw new Error('Tên file không hợp lệ');return n;}
 function bkFolder_(){var it=DriveApp.getFoldersByName(BK_FOLDER);return it.hasNext()?it.next():DriveApp.createFolder(BK_FOLDER);}
 function bkSave_(name,data){

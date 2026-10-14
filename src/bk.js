@@ -1,5 +1,5 @@
 /* ===================== SAO LƯU TỰ ĐỘNG LÊN GOOGLE DRIVE + TRẠNG THÁI ĐỒNG BỘ ===================== */
-/* Dữ liệu (lớp, bài, phiếu, sổ điểm…) gửi qua Apps Script vào thư mục “Chấm phiếu OMR - Sao lưu” trong Drive của thầy.
+/* Dữ liệu (lớp, bài, phiếu, sổ điểm…) gửi qua Apps Script vào thư mục “Chấm phiếu VTL - Sao lưu” trong Drive của thầy.
    Ảnh bài làm gửi tăng dần (chỉ ảnh mới). Mỗi ngày giữ một bản riêng, giữ 14 ngày gần nhất. */
 const BK={st:'idle',msg:'',t:lsGet('omr.bkt',0),dirty:lsGet('omr.bkdirty',0),busy:false,timer:0,err:'',imgs:new Set(lsGet('omr.bkimgs',[])),last:lsGet('omr.bkinfo',null)};
 const bkOn=()=>gsOn()&&S.cfg.bkAuto!==false;
@@ -23,7 +23,7 @@ function bkCard(){
 }
 function bkRender(){
   const box=$('#bkBox');if(!box)return;const s=bkState();
-  box.innerHTML=`<p class="muted" style="margin-top:0">Tự động gửi toàn bộ dữ liệu (lớp, bài kiểm tra, phiếu đã quét, sổ điểm, ảnh bài làm) vào thư mục <b>“Chấm phiếu OMR - Sao lưu”</b> trong Google Drive của thầy. Mất máy hoặc đổi máy chỉ cần bấm “Khôi phục từ Drive”. Dùng chung link Apps Script ở mục Google Sheet bên trên.</p>
+  box.innerHTML=`<p class="muted" style="margin-top:0">Tự động gửi toàn bộ dữ liệu (lớp, bài kiểm tra, phiếu đã quét, sổ điểm, ảnh bài làm) vào thư mục <b>“Chấm phiếu VTL - Sao lưu”</b> trong Google Drive của thầy. Mất máy hoặc đổi máy chỉ cần bấm “Khôi phục từ Drive”. Dùng chung link Apps Script ở mục Google Sheet bên trên.</p>
   <div class="bkcard" style="margin:6px 0 10px"><span class="bkdot bk-dot ${s.cls}"></span><div class="l"><b>Trạng thái</b><small class="bk-msg">${esc(s.text)}</small></div></div>
   <label class="toggle"><input type="checkbox" id="bkAuto"${S.cfg.bkAuto!==false?' checked':''}> Tự động sao lưu khi có thay đổi</label>
   <label class="toggle"><input type="checkbox" id="bkImg"${S.cfg.bkImg!==false?' checked':''}> Sao lưu cả ảnh bài làm (tốn dung lượng Drive)</label>

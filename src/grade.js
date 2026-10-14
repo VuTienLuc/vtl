@@ -106,7 +106,7 @@ function gbCsv(c){
 }
 function gbPrint(c){
   const rows=gbRows(c),hk=GB.hk;
-  const h=`<div class="pdf"><div class="pg"><div class="ph"><b>${esc(S.cfg.school||'Sổ điểm')}</b><span>Thầy Vũ Tiến Lực · Chấm phiếu OMR</span></div><h1>Sổ điểm lớp ${esc(c.name)}</h1><p class="pm">${hk===0?'Cả năm học':'Học kỳ '+(hk===1?'I':'II')} · hệ số TX ${gbOf(c).w.tx} – GK ${gbOf(c).w.gk} – CK ${gbOf(c).w.ck}</p>
+  const h=`<div class="pdf"><div class="pg"><div class="ph"><b>${esc(S.cfg.school||'Sổ điểm')}</b><span>Thầy Vũ Tiến Lực · Chấm phiếu VTL</span></div><h1>Sổ điểm lớp ${esc(c.name)}</h1><p class="pm">${hk===0?'Cả năm học':'Học kỳ '+(hk===1?'I':'II')} · hệ số TX ${gbOf(c).w.tx} – GK ${gbOf(c).w.gk} – CK ${gbOf(c).w.ck}</p>
   <table class="pt"><thead><tr>${rows[0].map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map((x,i)=>`<td${i===1?' class="l"':''}>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   printHTML(h);
 }

@@ -233,7 +233,7 @@ function qsSteps(){
 }
 function renderHome(){
   const ex=curEx(),n=myScans().length,st=qsSteps(),done=st.filter(x=>x.ok).length,next=st.findIndex(x=>!x.ok);
-  let h=`<div class="hero"><div class="hlogo">📷</div><h1>Chấm phiếu OMR</h1><p>Chấm trắc nghiệm bằng camera điện thoại — nhanh, chính xác, không cần máy chấm.</p><div class="by">Thầy Vũ Tiến Lực<span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div></div>`;
+  let h=`<div class="hero"><div class="hlogo">📷</div><h1>Chấm phiếu VTL</h1><p>Chấm trắc nghiệm bằng camera điện thoại — nhanh, chính xác, không cần máy chấm.</p><div class="by">Thầy Vũ Tiến Lực<span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div></div>`;
   h+=bkCard();
   h+=`<div class="card cur"><div class="curh"><small>Bài đang chấm</small><b>${esc(ex.name)}</b><span>${esc(exSub(ex)||'Chưa ghi lớp')} · ${n} phiếu đã quét</span></div><button class="btn primary big" id="hmScan">📷 Quét phiếu ngay</button><div class="row gap" style="margin:8px 0 0"><button class="btn sm" data-go="results">📊 Xem kết quả</button><button class="btn sm" data-go="keys">🔄 Đổi / tạo bài</button></div></div>`;
   h+=`<div class="card"><div class="qh"><h3>Bắt đầu nhanh</h3><span class="pill${done===5?' okp':''}">${done}/5 bước</span></div><div class="prog"><i style="width:${done*20}%"></i></div>`;
@@ -296,7 +296,7 @@ async function exportPdf(withImgs){
   const st=stats(list),tot=totalOf(ex)||10,wk=list.map(s=>({s,sc:scoreOf(s)})).filter(x=>x.sc);
   const bins=[0,0,0,0,0,0,0,0,0,0];if(st)st.v.forEach(x=>bins[Math.max(0,Math.min(9,Math.floor(x/tot*10+1e-9)))]++);const mx=Math.max(...bins,1);
   const pass=st?st.v.filter(x=>x>=tot/2).length:0;
-  let h=`<div class="pdf"><div class="pg"><div class="ph"><b>${esc(S.cfg.school||'Thống kê điểm')}</b><span>Thầy Vũ Tiến Lực · Chấm phiếu OMR</span></div><h1>${esc(ex.name||'Bài kiểm tra')}</h1><p class="pm">${esc(exSub(ex)||'')}${ex.lop?'':''} · ${esc(exDesc(ex))}</p>`;
+  let h=`<div class="pdf"><div class="pg"><div class="ph"><b>${esc(S.cfg.school||'Thống kê điểm')}</b><span>Thầy Vũ Tiến Lực · Chấm phiếu VTL</span></div><h1>${esc(ex.name||'Bài kiểm tra')}</h1><p class="pm">${esc(exSub(ex)||'')}${ex.lop?'':''} · ${esc(exDesc(ex))}</p>`;
   h+=`<div class="tl"><div><b>${list.length}</b><small>bài</small></div><div><b>${st?fmt(st.mean):'–'}</b><small>điểm TB</small></div><div><b>${st?fmt(st.max):'–'}</b><small>cao nhất</small></div><div><b>${st?fmt(st.min):'–'}</b><small>thấp nhất</small></div><div><b>${st?Math.round(pass/st.n*100):0}%</b><small>từ ${fmt(tot/2)} điểm trở lên</small></div></div>`;
   if(st)h+=`<h2>Phổ điểm</h2><div class="hs">${bins.map((b,i)=>`<div><em>${b||''}</em><i style="height:${Math.round(b/mx*100)}%"></i><span>${tot===10?i+'–'+(i+1):fmt(i*tot/10)}</span></div>`).join('')}</div>`;
   if(wk.length>=2){const parts=[],pct=a=>Math.round(a.filter(Boolean).length/a.length*100);

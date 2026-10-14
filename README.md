@@ -1,4 +1,4 @@
-# Chấm phiếu OMR — web app cho iPhone
+# Chấm phiếu VTL — web app cho iPhone
 
 Chấm phiếu trắc nghiệm bằng camera điện thoại. Có 3 mẫu phiếu:
 - **Nửa tờ A4 (mặc định, tiết kiệm giấy):** 20 câu trắc nghiệm + 6 câu Đúng–Sai + 6 câu Trả lời ngắn. In 2 phiếu trên 1 tờ A4, cắt đôi theo nét đứt.
