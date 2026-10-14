@@ -1,0 +1,95 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="author" content="Thầy Vũ Tiến Lực - Trường THPT Nguyễn Hữu Cảnh - TP Hồ Chí Minh">
+<title>Tra cứu điểm</title>
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#f5f6fa;--surface:#fff;--surface2:#eef0f6;--text:#14161f;--muted:#6b7285;--border:#dde1ec;--primary:#2563eb;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;--brand:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#38bdf8 100%)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1017;--surface:#181b26;--surface2:#222636;--text:#eef0f7;--muted:#9aa1b8;--border:#2c3144;--primary:#7aa7ff;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+.wrap{max-width:560px;margin:0 auto}
+.hero{background:var(--brand);color:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(37,99,235,.25)}
+.hero h1{margin:0 0 4px;font-size:24px}.hero p{margin:0;opacity:.92;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:12px}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+input{width:100%;min-height:52px;border:2px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-size:22px;letter-spacing:3px;text-align:center;text-transform:uppercase;font-family:ui-monospace,Menlo,monospace;padding:0 12px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+button{width:100%;min-height:52px;margin-top:10px;border:0;border-radius:12px;background:var(--primary);color:#fff;font-size:17px;font-weight:700;cursor:pointer}
+@media (prefers-color-scheme:dark){button{color:#0e1017}}
+button:disabled{opacity:.6}
+.msg{margin-top:10px;font-size:14px;color:var(--muted)}.msg.bad{color:var(--bad);font-weight:600}
+h2{font-size:18px;margin:0 0 2px}.sub{color:var(--muted);font-size:14px;margin:0 0 10px}
+.stats{display:flex;gap:8px;margin:10px 0}.st{flex:1;background:var(--surface2);border-radius:12px;padding:10px 6px;text-align:center}.st b{display:block;font-size:24px}.st small{color:var(--muted);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:center}th{font-size:12px;color:var(--muted)}td.l,th.l{text-align:left}td.l small{display:block;color:var(--muted);font-size:11px}td b{font-size:16px}
+.up{color:var(--ok)}.dn{color:var(--bad)}
+.lch{width:100%;height:auto;display:block;background:var(--surface2);border-radius:12px}
+.lgd{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:6px 0}.lgd i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin:18px 0 0}.foot b{color:var(--text);display:block;font-size:13px}
+.link{background:none;color:var(--primary);min-height:44px;margin-top:6px;font-size:15px}
+@media (prefers-reduced-motion:no-preference){.card{animation:in .25s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}}}
+</style></head><body><div class="wrap">
+<div class="hero"><h1>🔎 Tra cứu điểm</h1><p>Nhập mã riêng do thầy cô phát để xem điểm các bài kiểm tra của em.</p></div>
+<div class="card" id="fm"><form id="f" autocomplete="off"><label for="code">Mã tra cứu của em</label><input id="code" maxlength="9" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="ABCD-EFGH" required><button id="go" type="submit">Xem điểm</button></form><div class="msg" id="msg"></div></div>
+<div id="res"></div>
+<div class="foot"><b>Thầy Vũ Tiến Lực</b>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh<br>Mã tra cứu là của riêng em, đừng chia sẻ cho bạn khác.</div>
+</div>
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)},qs=new URLSearchParams(location.search);
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function f1(x){return x==null||isNaN(x)?'–':String(Math.round(x*10+1e-9)/10).replace('.',',')}
+function base(){var u=qs.get('u')||'';if(!u)return'';if(/^https:\/\/script\.google\.com\//.test(u))return u;if(/^[\w-]+$/.test(u))return'https://script.google.com/macros/s/'+u+'/exec';try{u=decodeURIComponent(u)}catch(e){}return/^[\w\-\/]+$/.test(u)?'https://script.google.com/'+u:''}
+var B=base();
+function norm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function show(c){return c.length>4?c.slice(0,4)+'-'+c.slice(4):c}
+$('#code').addEventListener('input',function(e){var v=norm(e.target.value).slice(0,8);e.target.value=show(v)});
+function chart(x){
+  var W=340,H=160,L=26,R=10,T=14,Bm=24,n=x.length,iw=W-L-R,ih=H-T-Bm;
+  function X(i){return n===1?L+iw/2:L+i*iw/(n-1)}function Y(v){return T+ih-(v/10)*ih}
+  var s='<svg class="lch" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Biểu đồ điểm qua các bài">';
+  [0,5,10].forEach(function(v){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--border)"/><text x="'+(L-4)+'" y="'+(Y(v)+3)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+v+'</text>'});
+  x.forEach(function(p,i){s+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9" fill="var(--muted)">B'+(i+1)+'</text>'});
+  function line(key,col,dash,main){var d='',pen=false;x.forEach(function(p,i){var v=p[key];if(v==null){pen=false;return}d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';pen=true});
+    s+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(main?2.6:1.8)+'"'+(dash?' stroke-dasharray="5 4"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';
+    x.forEach(function(p,i){var v=p[key];if(v==null)return;s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="'+(main?3.8:2.5)+'" fill="'+col+'"/>';if(main)s+='<text x="'+X(i).toFixed(1)+'" y="'+(Y(v)-7).toFixed(1)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text)">'+f1(v)+'</text>'})}
+  if(x.some(function(p){return p.m!=null}))line('m','var(--muted)',true,false);
+  line('s','var(--primary)',false,true);return s+'</svg>';
+}
+function render(r){
+  var d=r.d,x=d.x||[],h='<div class="card"><h2>'+esc(d.n)+'</h2><p class="sub">Lớp '+esc(d.l)+(r.u?' · cập nhật '+new Date(r.u).toLocaleString('vi-VN'):'')+'</p>';
+  if(x.length){
+    var vals=x.map(function(p){return p.s}),avg=vals.reduce(function(a,b){return a+b},0)/vals.length,last=vals[vals.length-1],dl=vals.length>1?last-vals[vals.length-2]:null;
+    h+='<div class="stats"><div class="st"><b>'+f1(last)+'</b><small>bài gần nhất</small></div><div class="st"><b>'+f1(avg)+'</b><small>điểm TB các bài</small></div>'+(dl!=null?'<div class="st"><b class="'+(dl>=0.4?'up':dl<=-0.4?'dn':'')+'">'+(dl>0?'+':'')+f1(dl)+'</b><small>so với bài trước</small></div>':'')+'</div>';
+    h+=chart(x)+'<div class="lgd"><span><i style="background:var(--primary)"></i>Điểm của em</span>'+(x.some(function(p){return p.m!=null})?'<span><i style="background:var(--muted)"></i>TB lớp</span>':'')+'</div>';
+    var hasR=x.some(function(p){return p.r});
+    h+='<table><thead><tr><th class="l">Bài kiểm tra</th><th>Điểm</th>'+(x.some(function(p){return p.m!=null})?'<th>TB lớp</th>':'')+(hasR?'<th>Hạng</th>':'')+'</tr></thead><tbody>'+x.map(function(p){return'<tr><td class="l">'+esc(p.e)+'<small>'+esc(p.d)+'</small></td><td><b>'+f1(p.s)+'</b></td>'+(x.some(function(q){return q.m!=null})?'<td>'+f1(p.m)+'</td>':'')+(hasR?'<td>'+(p.r?p.r+'/'+p.n:'–')+'</td>':'')+'</tr>'}).join('')+'</tbody></table>';
+  }else h+='<p class="sub">Chưa có điểm bài kiểm tra nào.</p>';
+  h+='</div>';
+  var g=d.g;
+  if(g&&(g.hk1&&g.hk1.avg!=null||g.hk2&&g.hk2.avg!=null)){
+    function li(a){return a&&a.length?a.join(' · '):'–'}
+    h+='<div class="card"><h2>Điểm môn học</h2><p class="sub">Thường xuyên, giữa kỳ, cuối kỳ và điểm trung bình</p><table><thead><tr><th></th><th>TX</th><th>GK</th><th>CK</th><th>ĐTB</th></tr></thead><tbody>'+
+      [['HK I',g.hk1],['HK II',g.hk2]].map(function(z){var k=z[1]||{};return'<tr><td><b>'+z[0]+'</b></td><td>'+li(k.tx)+'</td><td>'+li(k.gk)+'</td><td>'+li(k.ck)+'</td><td><b>'+f1(k.avg)+'</b></td></tr>'}).join('')+
+      '<tr><td colspan="4" style="text-align:right"><b>Cả năm</b></td><td><b>'+f1(g.y)+'</b></td></tr></tbody></table></div>';
+  }
+  h+='<button class="link" id="again" type="button">Tra cứu mã khác</button>';
+  $('#res').innerHTML=h;$('#fm').hidden=true;$('#again').onclick=function(){$('#res').innerHTML='';$('#fm').hidden=false;$('#code').value='';$('#code').focus();$('#msg').textContent=''}
+}
+function look(code){
+  var m=$('#msg'),b=$('#go');code=norm(code);
+  if(code.length<8){m.className='msg bad';m.textContent='Mã gồm 8 ký tự (chữ và số).';return}
+  if(!B){m.className='msg bad';m.textContent='Đường dẫn chưa đủ thông tin. Hãy quét lại mã QR trên thẻ hoặc hỏi thầy cô.';return}
+  m.className='msg';m.textContent='Đang tìm…';b.disabled=true;
+  fetch(B+'?m='+encodeURIComponent(code)).then(function(r){return r.text()}).then(function(t){var r;try{r=JSON.parse(t)}catch(e){throw new Error('Máy chủ chưa sẵn sàng, thử lại sau ít phút')}
+    if(!r.ok){m.className='msg bad';m.textContent=r.error||'Không tìm thấy';return}
+    try{localStorage.setItem('tc.code',code)}catch(e){}m.textContent='';render(r)})
+  .catch(function(e){m.className='msg bad';m.textContent=(e&&e.message)||'Không có kết nối mạng'})
+  .then(function(){b.disabled=false});
+}
+$('#f').addEventListener('submit',function(e){e.preventDefault();look($('#code').value)});
+var pre=norm(qs.get('m'));if(!pre){try{pre=localStorage.getItem('tc.code')||''}catch(e){}}
+if(pre){$('#code').value=show(pre);if(qs.get('m'))look(pre)}
+})();
+</script></body></html>

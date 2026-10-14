@@ -49,3 +49,7 @@ Tác giả: **Thầy Vũ Tiến Lực** — Trường THPT Nguyễn Hữu Cảnh
 
 ## Chấm nhóm bằng thẻ QR
 Mỗi nhóm (1–24) một thẻ QR; xoay thẻ để chữ A/B/C/D ở cạnh trên. Thư viện: jsQR (Apache-2.0), qrcode-generator (MIT).
+
+## Sổ điểm, tiến bộ, phiếu điểm, sao lưu
+- **Sổ điểm** (TX/GK/CK theo hệ số, ĐTB học kỳ và cả năm), **Tiến bộ** (biểu đồ từng em, so sánh lớp theo tên bài), **Phiếu điểm** (PDF kèm ảnh bài làm, thẻ mã QR tra cứu), `tra-cuu.html` (học sinh tự tra điểm).
+- **Sao lưu Drive** tự động qua Apps Script (`apps-script/Code.gs`, VER=2): cần dán mã mới, triển khai lại phiên bản mới và cấp quyền Drive.

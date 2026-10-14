@@ -54,6 +54,14 @@
     <p>Chấm xong, tab <b>Kết quả</b> › nút “Tổng kết & lời động viên”: xem xếp loại cả lớp, những câu nên ôn lại, và nhận lời nhắn động viên cho từng em theo nhiều phong cách (ấm áp, truyền cảm hứng, vui vẻ, gửi phụ huynh…). Bấm Sao chép hoặc Chia sẻ để gửi qua Zalo, tin nhắn.</p></div></details>
   <details class="hp"><summary><i>☁️</i>Lưu điểm vào Google Sheet</summary><div class="hb">
     <p>Vào <b>Cài đặt › Lưu điểm lên Google Sheet</b>, bấm “Lấy mã Apps Script” và làm theo 4 bước (chỉ làm một lần). Sau đó điểm tự lưu theo từng lớp, mỗi bài một cột; sửa đáp án thì bảng tự cập nhật. <button class="lnk" data-go="settings">Mở Cài đặt</button></p></div></details>
+  <details class="hp"><summary><i>📒</i>Sổ điểm TX – GK – CK</summary><div class="hb">
+    <p>Vào <b>Trang chủ › Sổ điểm</b>. Chọn lớp, thêm cột điểm thường xuyên, giữa kỳ, cuối kỳ (gắn với một bài đã chấm hoặc nhập tay, dán được cả cột). Thầy cô chỉnh hệ số (mặc định 1 – 2 – 3); app tính điểm trung bình học kỳ và cả năm [(HK1 + 2×HK2)/3]. Học kỳ chưa đủ giữa kỳ hoặc cuối kỳ được ghi là “tạm tính”. Xuất CSV hoặc in PDF.</p></div></details>
+  <details class="hp"><summary><i>📈</i>Tiến bộ và so sánh giữa các lớp</summary><div class="hb">
+    <p><b>Trang chủ › Tiến bộ</b>: biểu đồ điểm từng em qua các bài, mũi tên tăng/giảm, xếp hạng trong lớp. Mục so sánh lớp gộp các bài cùng tên (ví dụ “Kiểm tra 15 phút”) nên hãy đặt tên bài thống nhất giữa các lớp.</p></div></details>
+  <details class="hp"><summary><i>🧾</i>Phiếu điểm gửi phụ huynh và trang tra cứu</summary><div class="hb">
+    <p><b>Trang chủ › Phiếu điểm</b>: tạo phiếu cá nhân (biểu đồ, bảng điểm, sổ điểm, lời nhắn, ảnh bài làm) rồi in/lưu PDF. Mỗi học sinh có một mã tra cứu 8 ký tự; in thẻ mã QR phát cho học sinh. Cần bật Google Sheet ở Cài đặt, nhập địa chỉ trang web của app và bấm đăng điểm.</p></div></details>
+  <details class="hp"><summary><i>🛟</i>Sao lưu tự động lên Google Drive</summary><div class="hb">
+    <p><b>Cài đặt › Sao lưu tự động</b>: sau khi dán mã Apps Script bản mới và cấp quyền Drive, dữ liệu (kể cả ảnh bài làm) tự lưu sau vài chục giây khi có mạng; trang chủ hiện trạng thái đồng bộ. Mất máy thì bấm “Khôi phục” trên máy mới. Giữ 14 bản theo ngày.</p></div></details>
   <details class="hp"><summary><i>📲</i>Cài lên iPhone như một ứng dụng</summary><div class="hb">
     <p>Mở trang bằng <b>Safari</b> › nút Chia sẻ (hình ô vuông có mũi tên) › <b>Thêm vào MH chính</b>. Từ đó có biểu tượng trên màn hình, mở toàn màn hình và dùng được khi không có mạng.</p></div></details>
   <details class="hp"><summary><i>❓</i>Hỏi nhanh – đáp gọn</summary><div class="hb">
@@ -124,6 +132,11 @@
   </div>
 </section>
 
+<section class="screen" id="s-gb" hidden><button class="back" data-go="home">‹ Trang chủ</button><h1>Sổ điểm</h1>
+  <p class="lead">Điểm thường xuyên, giữa kỳ, cuối kỳ của từng lớp và điểm trung bình môn theo hệ số.</p><div id="gbBody"></div></section>
+<section class="screen" id="s-prog" hidden><button class="back" data-go="home">‹ Trang chủ</button><h1>Tiến bộ &amp; so sánh lớp</h1><div id="prBody"></div></section>
+<section class="screen" id="s-rep" hidden><button class="back" data-go="home">‹ Trang chủ</button><h1>Phiếu điểm &amp; tra cứu</h1><div id="repBody"></div></section>
+
 <section class="screen" id="s-sheet" hidden><h1>Phiếu trả lời</h1>
   <div class="card"><label class="f">Mẫu phiếu<select id="shLayout"></select></label>
   <label class="f">Tên trường<input id="sh_school" placeholder="THPT Nguyễn Hữu Cảnh"></label>
@@ -142,6 +155,7 @@
   <label class="toggle"><input type="checkbox" id="gsAuto"> Tự động lưu khi có thay đổi</label>
   <div id="gsState" class="gsstate"></div>
   <div class="row gap"><button class="btn" id="gsTest">Kiểm tra kết nối</button><button class="btn primary" id="gsAll">Lưu tất cả bài</button><button class="btn ghost" id="gsCode">Lấy mã Apps Script</button></div></div>
+  <div class="card"><h3>☁ Sao lưu tự động lên Google Drive</h3><div id="bkBox"></div></div>
   <div class="card"><h3>Dữ liệu</h3><div class="row gap"><button class="btn" id="bkup">⬇ Sao lưu</button><label class="btn" for="rstFile" style="display:inline-flex;align-items:center">⬆ Khôi phục</label><input type="file" id="rstFile" accept=".json,application/json" hidden><button class="btn danger" id="wipe">Xóa bài đã quét</button></div></div>
   <div class="card about"><h3>Giới thiệu</h3><p><b>Chấm phiếu OMR</b> — chấm trắc nghiệm bằng camera điện thoại.</p><p class="muted">Tác giả: <b>Thầy Vũ Tiến Lực</b><br>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</p><button class="btn" data-go="help">📖 Hướng dẫn sử dụng</button></div>
   <div class="card"><h3>Cài lên iPhone</h3><p class="muted">Mở trang bằng Safari › nút Chia sẻ › “Thêm vào MH chính”. App chạy toàn màn hình, dùng được khi không có mạng. Camera cần địa chỉ https.</p></div>
@@ -153,6 +167,7 @@
 <div class="dlg" id="sdlg" hidden><div class="sheetbox"><header class="hg"><b>Tổng kết & lời động viên</b><button class="x" id="sdlgX">✕</button></header><div id="sBody"></div></div></div>
 <div class="dlg" id="cdlg" hidden><div class="sheetbox"><header class="hg"><b id="cTitle">Tạo lớp</b><button class="x" id="cdlgX">✕</button></header><div id="cBody"></div></div></div>
 <div class="dlg" id="edlg" hidden><div class="sheetbox"><header class="hg"><b id="eTitle">Tạo bài kiểm tra</b><button class="x" id="edlgX">✕</button></header><div id="eBody"></div></div></div>
+<div class="dlg" id="xdlg" hidden><div class="sheetbox"><header class="hg"><b id="xTitle"></b><button class="x" id="xdlgX">✕</button></header><div id="xBody"></div></div></div>
 <div class="dlg" id="kdlg" hidden><div class="sheetbox"><header><b>Đáp án mã đề</b><button class="x" id="kdlgX">✕</button></header><div id="kBody"></div></div></div>
 <div id="toast"></div><div id="printRoot"></div>
 <script>/*JS*/</script></body></html>

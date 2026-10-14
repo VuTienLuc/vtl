@@ -202,4 +202,3 @@ $('#qcDl').onclick=()=>{const [a,b]=qrRange(),pg=qrPages(a,b,+$('#qcPer').value)
 /* ---------- khởi động (chạy sau cùng) ---------- */
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&QC.on)stopQrCam()});
 Object.assign(window.OMR,{QC,qrProcess,qrIngest,qrScanFrame,qrR,qrTotals,qrCardG,qrPages,renderQR,startQrCam,stopQrCam,qrNewRound});
-go(lsGet('omr.tab','home'));

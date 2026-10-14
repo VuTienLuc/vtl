@@ -23,12 +23,14 @@ function migrate(){
 /* ----- Lớp: danh sách STT, Họ tên, SBD ----- */
 const lc=x=>String(x||'').trim().toLowerCase();
 function rebuildRoster(){S.rIdx={};S.roster={};(S.classes||[]).forEach(c=>c.students.forEach((st,i)=>{const k=String(parseInt(st.sbd,10));if(!st.sbd||k==='NaN')return;const e={name:st.name,lop:c.name,stt:i+1};(S.rIdx[k]||(S.rIdx[k]=[])).push(e);if(!S.roster[k])S.roster[k]=e}))}
+const sid=()=>'s'+Math.random().toString(36).slice(2,8);
+function ensureStudentIds(){let ch=false;(S.classes||[]).forEach(c=>c.students.forEach(x=>{if(!x.id){x.id=sid();ch=true}}));return ch}
 function migrateClasses(){
-  if(Array.isArray(S.classes)){rebuildRoster();return}
+  if(Array.isArray(S.classes)){rebuildRoster();if(ensureStudentIds())lsSet('omr.classes',S.classes);return}
   S.classes=[];const old=lsGet('omr.roster',{}),by={};
   Object.entries(old).sort((a,b)=>(+a[0])-(+b[0])).forEach(([id,r])=>{const n=String(r.lop||'').trim()||'Chưa rõ lớp';(by[n]||(by[n]=[])).push({name:r.name,sbd:id})});
   Object.keys(by).forEach(n=>S.classes.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n,students:by[n]}));
-  lsSet('omr.classes',S.classes);rebuildRoster();
+  ensureStudentIds();lsSet('omr.classes',S.classes);rebuildRoster();
 }
 migrateClasses();
 migrate();
@@ -206,9 +208,9 @@ async function handleFiles(files){
 
 /* ===================== ĐIỀU HƯỚNG ===================== */
 function go(tab){
-  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);const hl=(tab==='settings'||tab==='help'||tab==='qr')?'home':tab;$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===hl));
+  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+tab);const hl=['settings','help','qr','gb','prog','rep'].includes(tab)?'home':tab;$$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===hl));
   if(tab!=='scan')stopCam();if(tab!=='qr')stopQrCam();
-  if(tab==='home')renderHome();if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();if(tab==='qr')renderQR();
+  if(tab==='home')renderHome();if(tab==='results')renderResults();if(tab==='keys')renderKeys();if(tab==='class')renderClass();if(tab==='sheet')renderSheet();if(tab==='settings')renderSettings();if(tab==='qr')renderQR();if(tab==='gb')renderGB();if(tab==='prog')renderProg();if(tab==='rep')renderRep();if(tab==='settings')bkRender();
   lsSet('omr.tab',tab);window.scrollTo(0,0);
 }
 $$('.tabbar button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
@@ -232,11 +234,12 @@ function qsSteps(){
 function renderHome(){
   const ex=curEx(),n=myScans().length,st=qsSteps(),done=st.filter(x=>x.ok).length,next=st.findIndex(x=>!x.ok);
   let h=`<div class="hero"><div class="hlogo">📷</div><h1>Chấm phiếu OMR</h1><p>Chấm trắc nghiệm bằng camera điện thoại — nhanh, chính xác, không cần máy chấm.</p><div class="by">Thầy Vũ Tiến Lực<span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div></div>`;
+  h+=bkCard();
   h+=`<div class="card cur"><div class="curh"><small>Bài đang chấm</small><b>${esc(ex.name)}</b><span>${esc(exSub(ex)||'Chưa ghi lớp')} · ${n} phiếu đã quét</span></div><button class="btn primary big" id="hmScan">📷 Quét phiếu ngay</button><div class="row gap" style="margin:8px 0 0"><button class="btn sm" data-go="results">📊 Xem kết quả</button><button class="btn sm" data-go="keys">🔄 Đổi / tạo bài</button></div></div>`;
   h+=`<div class="card"><div class="qh"><h3>Bắt đầu nhanh</h3><span class="pill${done===5?' okp':''}">${done}/5 bước</span></div><div class="prog"><i style="width:${done*20}%"></i></div>`;
   h+=done===5?`<p class="muted">🎉 Thầy đã hoàn thành đủ các bước. Từ giờ chỉ cần chọn bài rồi quét phiếu.</p>`:'';
   h+='<ol class="qs">'+st.map((x,i)=>`<li class="${x.ok?'ok':i===next?'next':''}"><span class="dot">${x.ok?'✓':i+1}</span><div class="l"><b>${x.t}</b><small>${x.d}</small></div>${x.ok?'':`<button class="btn sm${i===next?' primary':''}" data-go="${x.go}">${x.b}</button>`}</li>`).join('')+'</ol></div>';
-  h+=`<div class="tiles"><button class="tile wide" data-go="qr"><i>👥</i><span><b>Chấm nhóm bằng thẻ QR</b><small>Hoạt động nhóm: mỗi nhóm giơ thẻ xoay 4 hướng A-B-C-D, quét một lần cả lớp</small></span></button><button class="tile" data-go="help"><i>📖</i><b>Hướng dẫn sử dụng</b><small>Từng bước cho người mới</small></button><button class="tile" data-go="settings"><i>⚙️</i><b>Cài đặt</b><small>Google Sheet, sao lưu, độ nhạy</small></button></div>`;
+  h+=`<div class="tiles"><button class="tile wide" data-go="qr"><i>👥</i><span><b>Chấm nhóm bằng thẻ QR</b><small>Hoạt động nhóm: mỗi nhóm giơ thẻ xoay 4 hướng A-B-C-D, quét một lần cả lớp</small></span></button><button class="tile" data-go="gb"><i>📒</i><b>Sổ điểm</b><small>TX, giữa kỳ, cuối kỳ, ĐTB theo hệ số</small></button><button class="tile" data-go="prog"><i>📈</i><b>Tiến bộ &amp; so sánh lớp</b><small>Biểu đồ từng em, xếp hạng lớp</small></button><button class="tile wide" data-go="rep"><i>📄</i><span><b>Phiếu điểm &amp; tra cứu điểm</b><small>PDF gửi phụ huynh kèm ảnh bài làm; mã tra cứu cho học sinh</small></span></button><button class="tile" data-go="help"><i>📖</i><b>Hướng dẫn sử dụng</b><small>Từng bước cho người mới</small></button><button class="tile" data-go="settings"><i>⚙️</i><b>Cài đặt</b><small>Google Sheet, sao lưu, độ nhạy</small></button></div>`;
   h+=`<div class="authorbox"><b>Tác giả: Thầy Vũ Tiến Lực</b><span>Trường THPT Nguyễn Hữu Cảnh · TP Hồ Chí Minh</span></div>`;
   $('#homeBody').innerHTML=h;
   $('#hmScan').onclick=()=>{go('scan');startCam()};
@@ -588,7 +591,7 @@ function parseStudents(rows){
 }
 function openClass(id){
   const old=id?S.classes.find(c=>c.id===id):null;
-  const c=old?{name:old.name,students:old.students.map(x=>({name:x.name,sbd:x.sbd}))}:{name:'',students:[]};
+  const c=old?{name:old.name,students:old.students.map(x=>({name:x.name,sbd:x.sbd,id:x.id,code:x.code}))}:{name:'',students:[]};
   $('#cTitle').textContent=old?'Sửa lớp':'Tạo lớp';
   $('#cBody').innerHTML=`<label class="f"><span>Tên lớp <b class="req">*</b></span><input id="cName" placeholder="10A1" value="${esc(c.name)}" autocapitalize="characters"></label>
   <div class="row gap"><label class="btn" for="cFile" style="display:inline-flex;align-items:center">📁 Nhập Excel / CSV</label><input type="file" id="cFile" accept=".xlsx,.csv,.tsv,.txt,text/csv" hidden><button class="btn" id="cPaste">📋 Dán danh sách</button></div>
@@ -621,7 +624,9 @@ function openClass(id){
   g('cCancel').onclick=()=>$('#cdlg').hidden=true;
   g('cSave').onclick=()=>{const nm=g('cName').value.trim();if(!nm)return toast('Nhập tên lớp');
     if(S.classes.some(o=>lc(o.name)===lc(nm)&&(!old||o.id!==old.id)))return toast('Đã có lớp “'+nm+'”');
-    const st=c.students.filter(x=>x.name.trim()||x.sbd).map(x=>({name:x.name.trim(),sbd:x.sbd}));
+    const st=c.students.filter(x=>x.name.trim()||x.sbd).map(x=>({name:x.name.trim(),sbd:x.sbd,id:x.id,code:x.code}));
+    if(old){const used=new Set(st.map(x=>x.id).filter(Boolean));st.forEach(x=>{if(x.id)return;const m=old.students.find(o=>!used.has(o.id)&&((x.sbd&&o.sbd&&parseInt(o.sbd,10)===parseInt(x.sbd,10))||lc(o.name)===lc(x.name)));if(m){x.id=m.id;x.code=m.code;used.add(m.id)}})}
+    st.forEach(x=>{if(!x.id)x.id=sid()});
     if(st.some(x=>!x.name))return toast('Có dòng chưa nhập họ tên');
     if(old){if(lc(old.name)!==lc(nm))S.exams.forEach(e=>{if(lc(e.lop)===lc(old.name))e.lop=nm});old.name=nm;old.students=st;save.exams()}else S.classes.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:nm,students:st});
     save.classes();$('#cdlg').hidden=true;renderClass();toast('Đã lưu lớp '+nm+' ('+st.length+' học sinh)')};
